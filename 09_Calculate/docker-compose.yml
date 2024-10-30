@@ -8,7 +8,7 @@ services:
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: password
-      MARIADB_DATABASE: myWebCalculatorDb  # Имя базы данных, указанное в настройках подключения
+      MARIADB_DATABASE: 9WebCalcul_Db  # Имя базы данных, указанное в настройках подключения
       MARIADB_USER: root                   # Имя пользователя, указанное в настройках подключения
       MARIADB_PASSWORD: password           # Пароль, указанный в настройках подключения
     ports:
