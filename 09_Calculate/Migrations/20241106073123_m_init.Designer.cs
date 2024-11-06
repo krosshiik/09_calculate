@@ -10,7 +10,7 @@ using _09_Calculate.Data;
 namespace _09_Calculate.Migrations
 {
     [DbContext(typeof(CalculatorContext))]
-    [Migration("20241030105126_m_init")]
+    [Migration("20241106073123_m_init")]
     partial class m_init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,17 +26,17 @@ namespace _09_Calculate.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("Operand_1")
-                        .HasColumnType("varchar(128)");
+                    b.Property<double>("Operand_1")
+                        .HasColumnType("double");
 
-                    b.Property<string>("Operand_2")
-                        .HasColumnType("varchar(128)");
+                    b.Property<double>("Operand_2")
+                        .HasColumnType("double");
 
                     b.Property<string>("Result")
                         .HasColumnType("varchar(128)");
 
-                    b.Property<string>("Type_operation")
-                        .HasColumnType("varchar(128)");
+                    b.Property<int>("Type_operation")
+                        .HasColumnType("int");
 
                     b.HasKey("ID_DataInputVariant");
 

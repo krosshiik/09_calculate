@@ -1,29 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using _09_Calculate.Data;
+﻿using _09_Calculate.Data;
+using _09_Calculate.Models;
+using _09_Calculate.Services;
+using Confluent.Kafka;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace _09_Calculate.Controllers
 {
-    public enum Operation { Add, Subtract, Multiply, Divide }
-
     public class CalculatorController : Controller
     {
-        private CalculatorContext _context;
+        private readonly CalculatorContext _context;
+        private readonly KafkaProducerService<Null, string> _producer;
 
-        public CalculatorController(CalculatorContext context)
+        public CalculatorController(CalculatorContext context, KafkaProducerService<Null, string> producer)
         {
             _context = context;
+            _producer = producer;
         }
 
-        [HttpGet]
+        /// <summary>
+        /// Отображение страницы Index.
+        /// </summary>
         public IActionResult Index()
         {
-            return View();
+            var data = _context.DataInputVariants.OrderByDescending(x => x.ID_DataInputVariant).ToList();
+            return View(data);
         }
 
+        /// <summary>
+        /// Обработка запроса на вычисление.
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Calculate(double num1, double num2, Operation operation)
+        public async Task<IActionResult> ProcessingCalculationRequest(double num1, double num2, Models.Operation operation)
         {
             double result = 0;
             string errorMessage = null;
@@ -32,24 +42,20 @@ namespace _09_Calculate.Controllers
             {
                 switch (operation)
                 {
-                    case Operation.Add:
+                    case Models.Operation.Add:
                         result = num1 + num2;
                         break;
-                    case Operation.Subtract:
+                    case Models.Operation.Subtract:
                         result = num1 - num2;
                         break;
-                    case Operation.Multiply:
+                    case Models.Operation.Multiply:
                         result = num1 * num2;
                         break;
-                    case Operation.Divide:
+                    case Models.Operation.Divide:
                         if (num2 != 0)
-                        {
                             result = num1 / num2;
-                        }
                         else
-                        {
                             errorMessage = "Ошибка: деление на ноль невозможно.";
-                        }
                         break;
                 }
             }
@@ -64,20 +70,48 @@ namespace _09_Calculate.Controllers
             ViewBag.Operation = operation.ToString();
             ViewBag.ErrorMessage = errorMessage;
 
-            // Создаем экземпляр класса DataInputVariant и заполняем его
+            // Создаем объект для передачи в Kafka
             var dataInputVariant = new DataInputVariant
             {
-                Operand_1 = num1.ToString(),
-                Operand_2 = num2.ToString(),
-                Type_operation = operation.ToString(),
+                Operand_1 = num1,
+                Operand_2 = num2,
+                Type_operation = operation,
                 Result = result.ToString()
             };
 
+            // Отправка данных в Kafka
+            await SendDataToKafka(dataInputVariant);
+
+            // Сохранение данных в БД
             _context.DataInputVariants.Add(dataInputVariant);
             _context.SaveChanges();
 
             return View("Index");
         }
 
+        public IActionResult Callback([FromBody] DataInputVariant inputData)
+        {
+            SaveDataAndResult(inputData);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Сохранение данных и результата в базе данных.
+        /// </summary>
+        private DataInputVariant SaveDataAndResult(DataInputVariant inputData)
+        {
+            _context.DataInputVariants.Add(inputData);
+            _context.SaveChanges();
+            return inputData;
+        }
+
+        /// <summary>
+        /// Отправка данных в Kafka.
+        /// </summary>
+        private async Task SendDataToKafka(DataInputVariant dataInputVariant)
+        {
+            var json = JsonSerializer.Serialize(dataInputVariant);
+            await _producer.ProduceAsync("Krasheninnikov", new Message<Null, string> { Value = json });
+        }
     }
 }

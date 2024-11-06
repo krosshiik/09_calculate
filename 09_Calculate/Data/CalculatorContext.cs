@@ -12,8 +12,7 @@ namespace _09_Calculate.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //OnModelCreating(modelBuilder);
+            // Optionally add any model configurations here in the future.
         }
     }
-
 }
