@@ -12,7 +12,7 @@
 
 <!-- Основное содержимое -->
 <div class="container">
-    <form id="calculatorForm" method="post" asp-controller="Calculator" asp-action="Calculate">
+    <form id="calculatorForm" method="post" asp-controller="Calculator" asp-action="ProcessingCalculationRequest">
         @Html.AntiForgeryToken()
 
         <input type="text" id="num1" name="num1" value="@ViewBag.Num1" placeholder="Введите первое число" required />
@@ -70,6 +70,19 @@
     {
         <h3 style="color:red;">@ViewBag.ErrorMessage</h3>
     }
+
+    <!-- Список данных из ViewBag.Data -->
+    <ul>
+        @if (ViewBag.Data != null)
+        {
+            @foreach (var rec in ViewBag.Data)
+            {
+                <li>
+                    <p>(@rec.ID_DataInputVariant) @rec.Operand_1 @rec.Type_operation @rec.Operand_2 = @rec.Result</p>
+                </li>
+            }
+        }
+    </ul>
 </div>
 
 <script>

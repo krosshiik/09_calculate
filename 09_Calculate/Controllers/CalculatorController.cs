@@ -4,6 +4,7 @@ using _09_Calculate.Services;
 using Confluent.Kafka;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace _09_Calculate.Controllers
@@ -20,12 +21,13 @@ namespace _09_Calculate.Controllers
         }
 
         /// <summary>
-        /// Отображение страницы Index.
+        /// Отображение страницы Index с данными из базы.
         /// </summary>
         public IActionResult Index()
         {
             var data = _context.DataInputVariants.OrderByDescending(x => x.ID_DataInputVariant).ToList();
-            return View(data);
+            ViewBag.Data = data; // Передача данных в ViewBag
+            return View(); // Возвращаем представление без передачи данных напрямую
         }
 
         /// <summary>
@@ -85,6 +87,10 @@ namespace _09_Calculate.Controllers
             // Сохранение данных в БД
             _context.DataInputVariants.Add(dataInputVariant);
             _context.SaveChanges();
+
+            // Обновляем ViewBag.Data после добавления новой записи
+            var updatedData = _context.DataInputVariants.OrderByDescending(x => x.ID_DataInputVariant).ToList();
+            ViewBag.Data = updatedData;
 
             return View("Index");
         }
