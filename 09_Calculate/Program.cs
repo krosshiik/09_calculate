@@ -42,7 +42,7 @@ builder.Services.AddOpenTelemetry()
             });
     });
 
-string mariadbCS = builder.Configuration.GetConnectionString("DefaultConnection");
+
 
 
 builder.Services.AddRazorPages();
@@ -60,6 +60,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.MapPrometheusScrapingEndpoint();
 
 app.UseRouting();
 
